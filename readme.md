@@ -4,6 +4,3 @@
 
 ### Iniciar aplicação
 `npm run test`
-
-
-![alt text](images/image.png)
