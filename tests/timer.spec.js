@@ -1,60 +1,65 @@
-/* Este arquivo conterá os testes automatizados para o seu cronômetro. Aqui está um exemplo de como os 
-testes podem ser estruturados: */
-
+const { _electron: electron } = require('playwright') // Importa o módulo Electron do Playwright
 const { test, expect } = require('@playwright/test')
 
 test.describe('Cronômetro', () => {
-    test.beforeAll(async ({ browser }) => {
-        // Inicia o aplicativo Electron
-        this.app = await browser.launch({
-            executablePath: 'path/to/electron', // Caminho para o executável do Electron, se necessário
-            args: ['path/to/your/app'], // Caminho para o seu aplicativo (a pasta onde está o main.js)
+    let app
+    let window
+
+    test.beforeAll(async () => {
+        // Inicia a aplicação Electron
+        app = await electron.launch({
+            executablePath: '/path/to/electron', // Substitua pelo caminho do executável do Electron
+            args: ['/path/to/your/app', '--no-sandbox'] // Substitua pelo caminho para o diretório da sua aplicação
         })
+
+        // Captura a janela principal da aplicação Electron
+        window = await app.firstWindow()
     })
 
     test.afterAll(async () => {
-        await this.app.close()
+        await app.close()
     })
 
-    test('Iniciar o cronômetro', async ({ page }) => {
-        await page.goto('http://localhost:3000') // Se necessário, ajuste a URL
+    test('Iniciar o cronômetro', async () => {
+        // Acessa a interface da aplicação Electron
+        await window.goto('http://localhost:3000') 
 
         // Clica no botão "Iniciar"
-        await page.click('button#start')
+        await window.click('button#start')
 
-        // Aguarda alguns segundos (ajuste conforme necessário)
-        await page.waitForTimeout(5000)
+        // Aguarda 5 segundos(ajuste conforme necessário)
+        await window.waitForTimeout(5000)
 
         // Verifica se o cronômetro está rodando
-        const timerText = await page.textContent('#timer')
+        const timerText = await window.textContent('#timer')
         expect(timerText).not.toBe('00:00:00')
     })
 
-    test('Pausar o cronômetro', async ({ page }) => {
+    test('Pausar o cronômetro', async () => {
         // Clica no botão "Pausar"
-        await page.click('button#pause')
+        await window.click('button#pause')
 
         // Aguarda um segundo
-        await page.waitForTimeout(1000)
+        await window.waitForTimeout(1000)
 
         // Verifica se o cronômetro parou
-        const timerTextAfterPause = await page.textContent('#timer')
+        const timerTextAfterPause = await window.textContent('#timer')
         expect(timerTextAfterPause).toBe('00:00:05') // Verifique o valor com base no tempo esperado
     })
 
-    test('Reiniciar o cronômetro', async ({ page }) => {
+    test('Reiniciar o cronômetro', async () => {
         // Clica no botão "Reiniciar"
-        await page.click('button#reset')
+        await window.click('button#reset')
 
         // Verifica se o cronômetro foi reiniciado
-        const timerTextAfterReset = await page.textContent('#timer')
+        const timerTextAfterReset = await window.textContent('#timer')
         expect(timerTextAfterReset).toBe('00:00:00')
     })
 
-    test('Fechar o aplicativo', async ({ page }) => {
+    test('Fechar o aplicativo', async () => {
         // Clica no botão "Fechar" e confirma
-        await page.click('button#close')
-        const dialog = await page.waitForEvent('dialog')
+        await window.click('button#close')
+        const dialog = await window.waitForEvent('dialog')
         expect(dialog.message()).toContain('Você tem certeza que deseja fechar o aplicativo?')
         await dialog.accept()
     })
